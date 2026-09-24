@@ -1,0 +1,229 @@
+% SecureGate -- Notebook 02 Scientific Report
+% Designed for direct use in Overleaf.
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[margin=1.8cm]{geometry}
+\usepackage{amsmath,amssymb,booktabs}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist{nosep,leftmargin=1.4em}
+
+\title{\textbf{SecureGate: Gate Interface and Initial Gate-Fingerprint Analysis}}
+\author{Marya Alturki}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\textbf{Purpose.}
+This report documents the work implemented in \texttt{02\_gate\_interface.ipynb}.
+The notebook establishes the logical-gate interface used by SecureGate, audits the
+available surface-code backend, implements encoded logical \(X\) and \(Z\) operations,
+samples their detector records, and performs an initial gate-inference test. Its
+purpose is to provide a compact scientific roadmap so that the notebook can be
+followed in execution order without reconstructing the motivation of each cell.
+
+\textbf{1. Logical-gate interface.}
+
+A common \texttt{GateOperation} representation was introduced for logical
+operations. The interface stores a gate name and the logical-qubit indices on which
+the gate acts. The current SecureGate gate set is
+\[
+\{I,X,Y,Z,H,S,CX,T\}.
+\]
+The implementation normalizes gate names to uppercase, checks that the gate belongs
+to the supported set, enforces the expected arity (one logical qubit for
+single-qubit gates and two for \(CX\)), and requires non-negative integer qubit
+indices. Basic tests verified valid \(X\) and \(CX\) objects and confirmed that an
+invalid one-qubit \(CX\) operation is rejected. These tests establish a consistent
+front-end representation before fault-tolerant implementations are attached.
+
+\textbf{2. Surface-code backend audit.}
+
+The installed \texttt{surface-sim} interface was inspected rather than assuming
+that every required logical gate is natively available. For the rotated CSS
+surface-code mapping used in the experiments, the directly exposed logical
+operations include \(X\), \(Z\), \(S\), and \(CX\). The inspected unrotated mapping
+also exposes \(H\). \(Y\) and \(T\) are not directly exposed by either mapping in
+the installed interface.
+
+Accordingly, \(Y\) and \(T\) are treated as implementation tasks requiring an
+explicit construction (for example, a decomposition or state-injection strategy)
+rather than being assumed to be native operations. This capability audit is
+important for keeping later claims tied to the actual simulator API.
+
+\textbf{3. Distance-5 logical \(X\) implementation.}
+
+The gate-fingerprint experiments use a distance-\(5\) rotated surface code. The
+constructed layout contains 49 physical qubits, comprising 25 data qubits and
+24 ancilla qubits, and represents one logical qubit.
+
+For the logical \(X\) operator, \texttt{surface-sim} identifies the physical
+support as
+\[
+\{D1,D6,D11,D16,D21\},
+\]
+which correspond to physical indices
+\[
+\{0,5,10,15,20\}.
+\]
+The built-in \(X\)-gate configuration was inspected and applied to the layout.
+The generated logical-operation block explicitly contains
+\[
+X\;0\;5\;10\;15\;20,
+\]
+with the same physical error probability applied through the noise model. The
+implementation check returned \texttt{True}, confirming that the generated
+physical \(X\) layer matches the logical-\(X\) support specified by the layout.
+
+The high-level logical circuit is initialized, advanced by a \texttt{TICK}, applies
+\(X\), advances by a second \texttt{TICK}, and finally measures the logical qubit.
+After encoding through \texttt{surface-sim}, the complete fault-tolerant circuit
+contains 49 physical qubits, 73 measurements, 60 detectors, one logical observable,
+and 27 temporal ticks. The additional gates visible in the encoded circuit are
+part of the syndrome-extraction procedure rather than additional logical gates.
+
+\textbf{4. Detector sampling and \(X_L\) fingerprint.}
+
+For each experiment, the detector sampler returns a binary record for every shot.
+A detector value \(D_j=1\) denotes a detector event at detector \(j\), while
+\(D_j=0\) denotes no event. The experiment was sampled for
+\(10{,}000\) shots, producing a
+\[
+10{,}000\times 60
+\]
+binary detector matrix.
+
+For detector \(j\), the empirical event probability was estimated as
+\[
+\widehat{P}(D_j=1\mid X_L)
+=
+\frac{1}{N}\sum_{n=1}^{N}D_j^{(n)},
+\qquad N=10{,}000.
+\]
+The detector coordinates provide a spacetime location \((x,y,t)\) for each
+detector, allowing the empirical fingerprint to be examined both detector-by-
+detector and by temporal layer.
+
+The measured \(X_L\) detector activity is concentrated around the logical-operation
+layer. The mean detector-event probability was \(0.010087\) at \(t=0\),
+\(0.035963\) at \(t=1\), and \(0.020167\) at \(t=1.5\). The largest observed
+detector-event probabilities were located at \(t=1\). This establishes a
+time-localized detector signature associated with the logical-operation region,
+but it does not by itself establish unique gate identification.
+
+\textbf{5. Logical \(Z\) experiment and detector correspondence.}
+
+A separate distance-\(5\) logical \(Z\) experiment was constructed using the same
+layout, detector frame, and physical error probability. The logical \(Z\) support
+is the corresponding string of five data qubits \(D1\)--\(D5\), giving physical
+indices \(0,1,2,3,4\).
+
+The \(X_L\) and \(Z_L\) experiments were verified to contain the same detector
+count and the same ordered spacetime detector coordinates. Therefore, detector
+\(j\) in one experiment corresponds to detector \(j\) in the other experiment,
+which permits direct comparison of
+\[
+\widehat{P}(D_j=1\mid X_L)
+\quad\text{and}\quad
+\widehat{P}(D_j=1\mid Z_L).
+\]
+
+The mean absolute detector-level difference was
+\[
+\frac{1}{60}\sum_{j=1}^{60}
+\left|
+\widehat{P}(D_j=1\mid X_L)
+-
+\widehat{P}(D_j=1\mid Z_L)
+\right|
+=0.001635.
+\]
+The maximum absolute difference was \(0.00510\), occurring at detector 26,
+with spacetime coordinate
+\[
+(x,y,t)=(2,4,1).
+\]
+At this detector,
+\[
+\widehat{P}(D_{26}=1\mid X_L)=0.04050,
+\qquad
+\widehat{P}(D_{26}=1\mid Z_L)=0.03540.
+\]
+
+The temporal comparison gives
+\[
+\begin{array}{c|ccc}
+t & X_L\ \mathrm{mean} & Z_L\ \mathrm{mean} & |\Delta|\\
+\hline
+0.0 & 0.010087 & 0.010271 & 0.000183\\
+1.0 & 0.035963 & 0.035046 & 0.000917\\
+1.5 & 0.020167 & 0.020658 & 0.000492
+\end{array}
+\]
+so the largest aggregate difference is also concentrated at the central
+logical-operation layer.
+
+\textbf{6. Initial gate-inference experiment.}
+
+The complete 60-detector record from each shot was used as the feature vector.
+The \(10{,}000\) \(X_L\) and \(10{,}000\) \(Z_L\) shots were combined into a
+balanced binary dataset. An 80/20 stratified train/test split produced
+\(8{,}000\) training shots and \(2{,}000\) test shots per gate.
+
+A Bernoulli Naive Bayes classifier was trained because detector outcomes are
+binary. For an unseen detector record, the classifier estimates which gate class
+is more compatible with the observed pattern. The resulting test set contained
+\(4{,}000\) shots in total and gave
+\[
+\mathrm{Accuracy}=0.5052.
+\]
+The confusion matrix was
+\[
+\begin{array}{c|cc}
+ & \widehat{X}_L & \widehat{Z}_L\\
+\hline
+X_L & 537 & 1463\\
+Z_L & 516 & 1484
+\end{array}
+\]
+showing a substantial bias toward predicting \(Z_L\). The approximate 95\%
+confidence interval for the measured accuracy was
+\[
+[0.4898,\;0.5207],
+\]
+which contains the 0.50 chance level for two equally represented classes.
+
+These results indicate that, under the present simulation conditions and for this
+particular Bernoulli Naive Bayes baseline, the detector patterns did not provide
+reliable single-shot \(X_L\)-versus-\(Z_L\) identification. This should not be
+interpreted as a proof that the two gate distributions are exactly identical, or
+that no inference method can ever distinguish them. Rather, small empirical
+differences in detector firing probabilities did not translate into classification
+performance clearly above chance.
+
+\textbf{7. Relation to the reference work and next stage.}
+
+The observed baseline is consistent with the reference work's treatment of Pauli
+gates under an unbiased Pauli noise model: the paper reports substantial
+confusion among \(X\), \(Y\), and \(Z\) gate classes and describes them as sharing
+a non-distinctive fingerprint in that setting. The present experiment is narrower
+and is not a direct reproduction of the paper's full setup; it tests only
+\(X_L\) versus \(Z_L\) using the installed \texttt{surface-sim} model and a
+Bernoulli Naive Bayes classifier.
+
+The notebook therefore establishes a validated baseline for the next stage of
+SecureGate: implementing logical gates with more distinctive fault-tolerant
+signatures and evaluating whether detector spacetime patterns can support
+multi-class gate inference. The distinction between native backend operations and
+gates requiring explicit constructions will be preserved throughout that stage.
+
+\textbf{Reference.}
+Shukla et al., ``Anticipating Decoder Side-channel Attacks in Fault-tolerant
+Quantum Computers,'' arXiv:2607.12174 (2026).
+
+\end{document}
