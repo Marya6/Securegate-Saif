@@ -1,0 +1,15 @@
+# SecureGate runtime dependencies
+# Recommended Python version: 3.12.x
+
+numpy==2.5.2
+stim==1.16.0
+surface-sim==0.11.0
+
+pandas
+matplotlib
+scikit-learn
+scipy
+
+# For running the Jupyter notebooks
+jupyter
+ipykernel
