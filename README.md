@@ -211,57 +211,6 @@ These are exact likelihood results for the selected detector window under the ex
 
 This audit supplies a quantitative structural baseline for the complete detector models and motivates structure-preserving exact-inference approaches that retain the XOR/parity structure. The memory figures are theoretical dense-factor estimates for the audited orderings, not measured RAM use and not a conclusion about every possible exact-inference algorithm.
 
-## Repository structure
-
-The following is the curated project layout. It highlights the primary notebooks and the supporting result directories rather than listing temporary files, notebook checkpoints, or every individual output artifact.
-
-```text
-securegate-saif/
-├── README.md
-├── .gitignore
-├── docs/
-│   ├── SecureGate_Overleaf_Report_Checked.tex
-│   ├── SecureGate_Exact_ML_and_Full100_Feasibility_Report.tex
-│   ├── SecureGate_01_Backend_Test_Report.tex
-│   ├── SecureGate_Notebook03_H_S_Gate_Fingerprints_Report.tex
-│   ├── SecureGate_Gate_Fingerprint_Leakage_and_Pauli_Frame_Mitigation.pdf
-│   └── supporting reports and archived references
-├── notebooks/
-│   ├── 01_backend_test.ipynb
-│   ├── 02_gate_interface_repaired.ipynb
-│   ├── 03_H_S_gate_fingerprints.ipynb
-│   ├── Archive/
-│   │   └── 04_Pauli_Frame_Virtual_Error_Propagation.ipynb
-│   ├── SecureGate_Notebook04_Rate_Sweep.ipynb
-│   ├── SecureGate_Short_Circuit_Feasibility_Test_Updated.ipynb
-│   ├── SecureGate_Bounded_Exact_ML_Feasibility.ipynb
-│   ├── SecureGate_Full100_Detector_FactorGraph_Audit..ipynb
-│   ├── SecureGate_Clean_Kernel_Audit.ipynb
-│   ├── H_L_experiment.stim
-│   ├── S_L_experiment.stim
-│   ├── SecureGate_Reproducibility_Package/
-│   └── Short_Circuit_Feasibility_Results/
-├── results/
-│   ├── securegate_expo_demo_snapshot.npz
-│   ├── securegate_expo_attack_metrics.csv
-│   ├── securegate_expo_decoder_metrics.csv
-│   └── securegate_expo_demo_metadata.json
-├── SecureGate_Deliverables/
-│   ├── Final_Integration_Report.md
-│   ├── Environment_Manifest.txt
-│   ├── System_Architecture.png
-│   ├── System_Architecture.svg
-│   └── System_Architecture_Source.dot
-└── src/
-    ├── __init__.py
-    ├── inference/
-    │   └── __init__.py
-    ├── security/
-    │   └── __init__.py
-    └── simulation/
-        ├── __init__.py
-        └── surface_sim_backend.py
-```
 
 The repository is research-notebook-led, with saved circuits, datasets, analysis outputs, and supporting implementation modules.
 
@@ -269,71 +218,11 @@ The repository is research-notebook-led, with saved circuits, datasets, analysis
 
 ## Reproducibility and data
 
-### Reproducibility package
+SecureGate was developed through simulation-based experiments with separate evaluation pipelines for gate-identity inference, gate-order inference, and decoding reliability.
 
-`notebooks/SecureGate_Reproducibility_Package/` contains the principal H/S artifacts, including:
+This public repository provides the project overview, scientific documentation, and selected aggregate results. The complete research notebooks, raw experimental datasets, model checkpoints, and internal implementation artifacts are not included in this public release.
 
-- Saved H/S Stim circuits.
-- The Pauli-frame mask bank and detector geometry.
-- The frozen CNN checkpoint and HGB parameters.
-- Frozen train/validation/test datasets.
-- Exported run-level and summary CSV tables.
-- Environment metadata and a package-integrity manifest.
-
-The companion archive is `notebooks/SecureGate_Reproducibility_Package.zip`.
-
-### Recorded single-run demonstration
-
-The root `results/` directory contains a separate **single-run functional demonstration**:
-
-- `securegate_expo_demo_snapshot.npz`: 25,000 H shots and 25,000 S shots, each with 100 detector features before and after randomization, plus saved \(S_L\) decoder/CNN outputs and related flags.
-- `securegate_expo_attack_metrics.csv`: single-run NB, LR, and HGB demonstration metrics.
-- `securegate_expo_decoder_metrics.csv`: single-run \(S_L\) decoder metrics.
-- `securegate_expo_demo_metadata.json`: demonstration settings and override accounting.
-
-These files support inspection of recorded detector shots and the corresponding single-run outputs. They are **not** the repeated statistical results and must not be substituted for the 20-repetition studies. The snapshot does not store the per-shot Pauli identity.
-
-### Multi-gate data
-
-`notebooks/Short_Circuit_Feasibility_Results/` contains the sequence-study datasets, phase manifests, classifier predictions, transfer-test outputs, mask-validation records, BP+OSD decoder summaries, and paired statistical-test tables. The Phase 5.4 common-channel dataset contains 100,000 shots per sequence (300,000 across the three classes) and stores baseline and randomized 260-feature records, sequence labels, group identifiers, and observable bits.
-
-### Recorded environment
-
-The experiment environment manifest is stored in `SecureGate_Deliverables/Environment_Manifest.txt`; the reproducibility package also contains its own `environment.json` and `pip_freeze.txt`.
-
-The recorded H/S development environment used Python 3.12.14 on macOS ARM64 with Stim 1.16.0, `surface-sim` 0.11.0, PyMatching 2.4.0, NumPy 2.5.2, pandas 3.0.6, SciPy 1.18.0, scikit-learn 1.9.1, PyTorch 2.15.0, and Matplotlib 3.11.1. The multi-gate BP+OSD analysis also records `ldpc==2.4.1`. Consult the environment files for the full platform-specific package snapshot.
-
-To create a Python environment matching the recorded H/S setup:
-
-```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r notebooks/SecureGate_Reproducibility_Package/pip_freeze.txt
-python -m ipykernel install --user --name securegate --display-name "Python (SecureGate)"
-```
-
-In Jupyter, select the `Python (SecureGate)` kernel. The recorded package freeze is platform-specific; dependency resolution may differ on Linux, Windows, or non-ARM systems.
-
----
-
-## Suggested notebook workflow
-
-The notebooks form a staged research workflow, from backend checks and circuit construction through mask validation, inference, decoder evaluation, and exact-inference analysis. Some sampling and repeated-experiment cells are computationally intensive; for an initial review, start with the saved outputs and run only the notebook stages you intend to reproduce.
-
-| Order | Notebook | Purpose |
-|---:|---|---|
-| 1 | `01_backend_test.ipynb` | Early backend and state-preparation detector-data validation. |
-| 2 | `02_gate_interface_repaired.ipynb` | Logical-gate interface and backend capability checks; preliminary gate experiments. |
-| 3 | `03_H_S_gate_fingerprints.ipynb` | Construction and baseline fingerprint analysis of the distance-5 \(H_L\) and \(S_L\) circuits. |
-| 4 | `Archive/04_Pauli_Frame_Virtual_Error_Propagation.ipynb` | Supporting Pauli-frame propagation and validation work. |
-| 5 | `SecureGate_Notebook04_Rate_Sweep.ipynb` | Primary H/S software-randomization workflow, rate sweep, integrated inference/decoder evaluation, HGB challenge, and recorded end-to-end demonstration. |
-| 6 | `SecureGate_Short_Circuit_Feasibility_Test_Updated.ipynb` | Multi-gate sequence construction, cross-dataset inference, common-channel randomization, and BP+OSD decoder evaluation. |
-| 7 | `SecureGate_Bounded_Exact_ML_Feasibility.ipynb` | Exact DEM likelihood analysis on selected detector windows up to 20 bits. |
-| 8 | `SecureGate_Full100_Detector_FactorGraph_Audit..ipynb` | Structural feasibility audit of dense full-detector variable elimination. |
-| 9 | `SecureGate_Clean_Kernel_Audit.ipynb` | Read-only artifact-loading and component smoke checks for the reproducibility package. |
-
-For ordinary inspection, the saved CSV/NPZ outputs and reproducibility package provide direct access to the recorded evidence. Re-running sampling, training, rate sweeps, or multi-repetition experiments is appropriate when independently reproducing or extending the studies; it is not necessary merely to inspect the archived results.
+The reported findings distinguish repeated statistical experiments from illustrative demonstration outputs. Further methodological details are provided in the Public Technical Report.
 
 ---
 
