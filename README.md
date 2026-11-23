@@ -6,6 +6,13 @@ SecureGate investigates gate-fingerprint leakage in fault-tolerant quantum circu
 
 > **Project scope and contribution.** SecureGate brings together two complementary numerical studies on an unrotated distance-5 CSS surface-code patch: logical-gate identity inference (\(H_L\) versus \(S_L\)) and chronological-order inference for matched five-gate circuits. It develops and validates a Pauli-frame-derived detector-mask channel, then quantifies its impact on inference and decoding metrics. The findings provide a simulation-based proof of concept for gate-fingerprint leakage and its software-level mitigation under the circuit, noise, attacker, and decoder settings documented below. Extension to other code distances, broader noise models, and physical hardware is a natural next stage of evaluation.
 
+
+## Interactive Results Dashboard
+
+Explore the interactive dashboard to view SecureGate's experimental results, gate-inference performance, and decoding reliability.
+
+[Open SecureGate Results Dashboard](https://marya6.github.io/Securegate-Saif/)
+
 ---
 
 ## Research tracks
